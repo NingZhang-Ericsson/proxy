@@ -19,43 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package com.ericsson.commonlibrary.proxy;
+package com.ericsson.commonlibrary.proxy.external;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
+import java.lang.reflect.Method;
+
+import com.ericsson.commonlibrary.proxy.JavaBeanSignedJarTest;
+import com.ericsson.commonlibrary.proxy.Proxy;
 
 /**
- * A {@link Interceptor} that add/restores/removes MDC logging information to the context of your
- * object and its child objects
- * 
- * @author Elis Edlund (elis.edlund@ericsson.com)
+ * This is the example class of the class <b>ExternalEntry</b> in src/test/resources/external.jar and external-sign.jar.
+ * The signed jar - external-sign.jar is used for generating class from singed jar, covered in {@link JavaBeanSignedJarTest}.
+ *
  */
-final class InterceptorMdc implements Interceptor {
+public class ExternalEntry1 {
 
-    //TODO use recursiveIntercept instead, InterceptorMdc have to be modified.
-    private static final Logger LOG = LoggerFactory.getLogger(InterceptorMdc.class);
+	public static void main(String[] args) {
+		JavaBean41 proxyBean = Proxy.javaBean(JavaBean41.class);
+		invokeSetName(proxyBean, "nisse");
+        if ("nisse".equals(proxyBean.getName())) {
+        	System.out.println("Setter for proxy bean works.");
+        }
+	}
 
-    private final String key;
-    private final String value;
-
-    public InterceptorMdc(String key, String value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    @Override
-    public Object intercept(Invocation invocation) throws Throwable {
-        String originalValue = MDC.get(key);
-        MDC.put(key, value);
+	private static void invokeSetName(Object proxyBean, String name) {
+        Method method = null;
         try {
-            return Util.tryToAddInterceptorToObject(invocation.invoke(), this, invocation, false);
-        } finally {
-            if (originalValue == null) {
-                MDC.remove(key);
-            } else {
-                MDC.put(key, originalValue);
-            }
+            method = proxyBean.getClass().getMethod("setName", String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            method.invoke(proxyBean, name);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
